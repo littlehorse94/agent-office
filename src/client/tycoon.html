@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#fff1de" />
+    <title>Agent Office</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="./tycoon.css" />
+  </head>
+  <body class="tycoon">
+    <!-- The tycoon view (tycoon.ts): the floor as an isometric office, a room per division. -->
+    <header class="ty-bar">
+      <label class="ty-floor" title="The floor you're on: pick another to see its minions">
+        <span class="ty-floor-label">Floor</span>
+        <select id="floor" aria-label="Floor"></select>
+      </label>
+      <div id="stats" class="ty-stats" aria-live="polite"></div>
+      <div class="ty-links">
+        <button id="zoom-out" class="btn" type="button" title="Zoom out" aria-label="Zoom out">−</button>
+        <button id="zoom-in" class="btn" type="button" title="Zoom in" aria-label="Zoom in">+</button>
+        <a class="btn" href="/lite" title="The 2D list view">📱 2D</a>
+        <a class="btn" href="/?3d=1" title="The 3D office, where you walk around">🏢 3D</a>
+      </div>
+    </header>
+    <main id="view" class="ty-view">
+      <div id="sizer" class="ty-sizer"><div id="world" class="ty-world"></div></div>
+    </main>
+    <nav class="ty-nav" aria-label="Office">
+      <button id="btn-hire" class="btn primary" type="button"><span class="ty-label">Hire</span></button>
+      <button id="btn-issues" class="btn" type="button"><span class="ty-label">Issues</span> <span class="n"></span></button>
+      <button id="btn-pulls" class="btn" type="button"><span class="ty-label">PRs</span> <span class="n"></span></button>
+      <button id="btn-queue" class="btn" type="button"><span class="ty-label">Queue</span> <span class="n"></span></button>
+    </nav>
+    <div id="toasts"></div>
+    <div id="conn" class="conn hidden">Reconnecting…</div>
+    <div id="modal-root"></div>
+    <script type="module" src="./tycoon.ts"></script>
+  </body>
+</html>

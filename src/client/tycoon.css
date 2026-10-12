@@ -1,0 +1,66 @@
+@import './styles/base.css';
+
+/* The tycoon view (tycoon.html): a bar on top, the isometric floor filling the middle, a toolbar below. */
+html, body { height: 100%; overflow: hidden; }
+body.tycoon { display: flex; flex-direction: column; height: 100dvh; background: #cfe8d5; }
+
+.ty-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; padding: 8px 12px; padding-top: max(8px, env(safe-area-inset-top)); background: var(--paper-2); border-bottom: 3px solid var(--ink); z-index: 20; }
+.ty-floor { display: flex; flex-direction: column; margin: 0; min-width: 0; }
+.ty-floor-label { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.ty-floor select { max-width: 260px; padding: 0 4px 0 0; border: 0; background: none; color: var(--ink); font: 900 18px/1.2 var(--font); cursor: pointer; }
+.ty-stats { flex: 1; display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.ty-chip { padding: 4px 10px; border: 2px solid var(--ink); border-radius: 999px; background: #fff; font-size: 13px; font-weight: 800; white-space: nowrap; }
+.ty-links { display: flex; gap: 6px; }
+.ty-links .btn { height: 40px; min-width: 40px; justify-content: center; text-decoration: none; }
+
+/* The floor scrolls both ways; #world is drawn at its natural size and scaled to the zoom. */
+/* Its own stacking context, so the sprites' z-indexes never reach over the windows. */
+.ty-view { position: relative; z-index: 0; isolation: isolate; flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; }
+.ty-sizer { position: relative; margin: 0 auto; }
+.ty-world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+
+.ty-sprite { position: absolute; display: block; max-width: none; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+.ty-tint { opacity: .3; }
+.ty-desk, .ty-minion { pointer-events: auto; cursor: pointer; }
+.ty-desk.ty-free { opacity: .55; }
+.ty-desk.ty-free:hover { opacity: .9; filter: drop-shadow(0 0 6px var(--accent)); }
+.ty-minion:hover { filter: drop-shadow(0 0 6px var(--accent)); }
+.ty-minion.exited, .ty-minion.offline { filter: grayscale(.8) opacity(.7); }
+.ty-minion.working { animation: ty-bob 1.2s ease-in-out infinite; }
+.ty-minion.needs_input { animation: ty-hop .6s ease-in-out infinite; }
+.ty-minion.done { animation: ty-hop 1.4s ease-in-out infinite; }
+/* `translate`, not `transform`, so a mirrored minion keeps its flip while it moves. */
+@keyframes ty-bob { 50% { translate: 0 -2px; } }
+@keyframes ty-hop { 50% { translate: 0 -8px; } }
+
+.ty-tag {
+  position: absolute; z-index: 9500; display: flex; align-items: center; gap: 4px; transform: translate(-50%, -100%);
+  padding: 2px 8px 2px 3px; border: 2px solid var(--ink); border-radius: 999px; background: #fff; box-shadow: 0 2px 0 var(--ink);
+  font-size: 12px; font-weight: 900; white-space: nowrap; pointer-events: none;
+}
+.ty-tag.needs-you { background: #ffd6e0; animation: ty-hop .6s ease-in-out infinite; }
+.ty-tag.done { background: #d8f3dc; }
+.ty-tag:not(:has(.ty-icon)) { padding-left: 8px; }
+.ty-role { color: var(--muted); font-weight: 800; }
+.ty-role::before { content: '· '; }
+.ty-icon { display: block; width: 28px; height: 28px; }
+
+.ty-sign {
+  position: absolute; width: 256px; height: 64px; display: flex; align-items: center; justify-content: center; padding: 0 24px 4px;
+  border: 0; background: center / contain no-repeat; color: var(--ink); font: 900 18px/1.1 var(--font); text-align: center; cursor: pointer;
+}
+.ty-sign:hover { filter: brightness(1.05) drop-shadow(0 0 6px var(--accent)); }
+
+.ty-nav { display: flex; justify-content: center; gap: 8px; padding: 8px 12px; padding-bottom: max(8px, env(safe-area-inset-bottom)); background: var(--paper-2); border-top: 3px solid var(--ink); z-index: 20; }
+.ty-nav .btn { height: 52px; gap: 6px; font-size: 15px; }
+.ty-nav .n:empty { display: none; }
+.ty-nav .n { padding: 0 7px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 12px; }
+
+.ty-hire .body { display: flex; flex-direction: column; gap: 14px; }
+.ty-hire h3 { margin: 0 0 6px; font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.ty-roles { display: flex; flex-wrap: wrap; gap: 8px; }
+
+@media (max-width: 640px) {
+  .ty-stats { order: 3; flex-basis: 100%; }
+  .ty-nav .btn { flex: 1; padding: 0 6px; font-size: 13px; }
+}

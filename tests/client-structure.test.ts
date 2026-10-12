@@ -76,3 +76,11 @@ test('the 2D view loads no three.js, and none of the 3D office: what it shares w
     assert.ok(graph(path.join(client, 'main.ts')).has(path.join(client, shared)), `the 3D office uses ${shared}`);
   }
 });
+
+test('the tycoon view loads no three.js either, and none of the 3D office', () => {
+  for (const f of graph(path.join(client, 'tycoon.ts'))) {
+    const rel = path.relative(client, f);
+    assert.doesNotMatch(read(f), /from 'three(?:\/[^']*)?'/, `${rel} (loaded by tycoon.ts) imports three.js`);
+    assert.ok(!/^(core|features|input|world|player)\//.test(rel), `tycoon.ts loads ${rel}, part of the 3D office`);
+  }
+});
