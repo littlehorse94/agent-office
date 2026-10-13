@@ -226,7 +226,7 @@ function boardActions(): BoardActions {
       closeAllModals();
       openWorker(w.id);
     },
-    meeting: () => toast('Meetings are in the 3D office', 'warn'),
+    meeting: () => toast("Meetings aren't in the tycoon view yet", 'warn'),
   };
 }
 
@@ -251,7 +251,7 @@ store.on('queue', renderNav);
 void (async () => {
   try {
     const who = await fetch('/api/whoami', { cache: 'no-store' });
-    if (who.status === 401) return void (location.href = '/login?next=/tycoon');
+    if (who.status === 401) return void (location.href = '/login');
     const { me } = (await who.json()) as { me?: typeof store.me };
     if (me) store.me = me;
     const res = await fetch('/api/tycoon', { cache: 'no-store' });

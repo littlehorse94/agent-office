@@ -139,7 +139,7 @@ before(async () => {
     execFileSync('git', args, { cwd: project });
   }
   // A client bundle of its own, so the test needn't build one.
-  for (const page of ['index', 'login', 'claim', 'join', 'lite']) writeFileSync(path.join(publicDir, `${page}.html`), `<!doctype html><title>${page}</title>`);
+  for (const page of ['index', 'tycoon', 'login', 'claim', 'join', 'lite']) writeFileSync(path.join(publicDir, `${page}.html`), `<!doctype html><title>${page}</title>`);
   writeFileSync(path.join(publicDir, 'favicon.svg'), '<svg xmlns="http://www.w3.org/2000/svg"/>');
   writeFileSync(path.join(publicDir, 'assets', 'app.js'), 'export {};\n');
   // A stand-in for Claude Code, so reading the plan's limits never runs the real one.
@@ -216,7 +216,8 @@ test('signs in with the office password', async () => {
 test('answers the signed-in routes', async () => {
   const me = { cookie };
   assert.deepEqual(await (await get('/api/whoami', me)).json(), { ok: true, me: { admin: true } });
-  assert.match(await (await get('/', me)).text(), /<title>index<\/title>/);
+  // The office is the tycoon view.
+  assert.match(await (await get('/', me)).text(), /<title>tycoon<\/title>/);
   assert.match(await (await get('/lite', me)).text(), /<title>lite<\/title>/);
   const floor = office.floors()[0].id;
   assert.deepEqual(await (await get(`/api/search?q=zzzz&floor=${floor}`, me)).json(), { q: 'zzzz', chat: [], terminals: [], more: false });

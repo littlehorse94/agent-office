@@ -10,7 +10,7 @@ const error = document.getElementById('error') as HTMLParagraphElement;
 const submit = document.getElementById('submit') as HTMLButtonElement;
 
 const NAME_KEY = 'agent-office.login-name';
-/** Where to go once in: the 2D view if that's where you were headed (see loginUrl in net.ts), else the office. */
+/** Where to go once in: the 2D view if that's where you were headed (see loginUrl in net.ts), else the office (the tycoon view). */
 const NEXT = new URLSearchParams(location.search).get('next') === '/lite' ? '/lite' : '/';
 
 // A sign-in link from the office's terminal (/login#key=…): it works once, so take it out of the

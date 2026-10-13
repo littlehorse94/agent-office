@@ -2,7 +2,7 @@
 
 Back to the [README](../README.md).
 
-`/tycoon` is the floor you're on as an isometric office, the way a tycoon game draws it: a room per division, a desk per minion, and every minion a real worker. It runs on the same server as the 3D office and the 2D view (`/lite`), and loads no three.js.
+The office (`/`, also at `/tycoon`) is the floor you're on as an isometric office, the way a tycoon game draws it: a room per division, a desk per minion, and every minion a real worker. On this branch it replaces the 3D office, whose code is kept but no longer served; the 2D list view is still at `/lite`. It loads no three.js.
 
 - **Rooms.** One per division of the roles on the building's floors (see [Roles](#roles)), and an **Open plan** for workers hired without one. Each room has a desk per minion in it and one spare.
 - **Minions.** Posed by how they're doing: idle, working, needs you (hand up, hopping, and a 🙋 on its tag) and done (arms up). Click one, or its desk, for its terminal. One that's asleep is woken up.
