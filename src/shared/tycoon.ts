@@ -78,6 +78,12 @@ export const ART: Readonly<Record<string, readonly [number, number]>> = {
   plant: [256, 256],
   shelf: [256, 256],
   sign: [512, 128],
+  // Decoration, drawn only when there's art for it: no placeholders.
+  whiteboard: [256, 256],
+  'water-cooler': [256, 256],
+  'coffee-machine': [256, 256],
+  sofa: [384, 256],
+  rug: [512, 256],
   'minion-idle': [128, 192],
   'minion-working': [128, 192],
   'minion-needs-you': [128, 192],

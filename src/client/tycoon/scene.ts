@@ -133,6 +133,22 @@ export function drawScene(world: HTMLElement, rooms: readonly Room[], act: Scene
     }
     const [px, py] = g(ROOM_W - 1, 0);
     sprite(['plant'], art.plant, at(px, py).x - 64, at(px, py).y + TH - 128, z(px, py, 2));
+    // Decoration, only once there's art for it: a rug under the desks, a whiteboard on the back
+    // wall, and by the door a coffee machine and a water cooler (and, in the first room, a sofa).
+    const decor = (name: string, gx: number, gy: number, sub = 2) => {
+      if (!art.hasArt(name)) return;
+      const [w, hgt] = art.size(name);
+      const p = at(gx, gy);
+      sprite([name], () => '', p.x - w / 2, p.y + TH - hgt, z(Math.floor(gx), Math.floor(gy), sub));
+    };
+    if (art.hasArt('rug')) {
+      const c = at(r.x + r.w / 2, r.y + r.d / 2);
+      sprite(['rug'], () => '', c.x - 128, c.y - 64, '3');
+    }
+    if (r.y === 0) decor('whiteboard', ...g(3, 0));
+    decor('coffee-machine', ...g(0, r.d - 1));
+    decor('water-cooler', ...g(ROOM_W - 1, r.d - 1));
+    if (r === rooms[0]) decor('sofa', ...g(2.5, r.d - 1));
 
     for (let i = 0; i < desksIn(r); i++) {
       const s = seatAt(i);

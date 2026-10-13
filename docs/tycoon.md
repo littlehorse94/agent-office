@@ -41,7 +41,7 @@ The `[role: …]` tag is how the view knows which room to seat it in, so a worke
 
 ## Art
 
-Everything is drawn as a placeholder until there's art for it. Put PNGs with a transparent background in the office's `.agent-office/tycoon-art/` folder (`~/agent-office/.agent-office/tycoon-art/`, or under the `--home` you start it with) and reload the page: no restart, and a missing file falls back to its placeholder.
+Everything is drawn as a placeholder until there's art for it, except the decoration (rug, whiteboard, coffee machine, water cooler, sofa), which only appears once its file is there. Put PNGs with a transparent background in the office's `.agent-office/tycoon-art/` folder (`~/agent-office/.agent-office/tycoon-art/`, or under the `--home` you start it with) and reload the page: no restart, and a missing file falls back to its placeholder.
 
 Draw everything at **2x**: the page shows it at half the size. The grid is 2:1 isometric (a tile is twice as wide as it is tall), light from the top left.
 
@@ -53,6 +53,10 @@ Draw everything at **2x**: the page shows it at half the size. The grid is 2:1 i
 | `desk.png` | 256 × 256 | A desk with a laptop. Its bottom edge sits on the tile's bottom corner. Mirrored for desks facing the other way. |
 | `plant.png` | 256 × 256 | A plant, in each room's back corner. |
 | `shelf.png` | 256 × 256 | A bookshelf, against the wall. |
+| `rug.png` | 512 × 256 | A rug under each room's desks, covering about 2 × 2 tiles. |
+| `whiteboard.png` | 256 × 256 | On the back wall of the rooms along it. |
+| `coffee-machine.png`, `water-cooler.png` | 256 × 256 | By each room's door. |
+| `sofa.png` | 384 × 256 | In the first room. |
 | `sign.png` | 512 × 128 | A room's sign: the room's name is written over it, so leave the middle plain. |
 | `minion-idle.png` | 128 × 192 | A minion standing, facing front-right. Its feet at the bottom center. |
 | `minion-working.png` | 128 × 192 | Typing, facing front-right. |
