@@ -64,3 +64,12 @@ body.tycoon { display: flex; flex-direction: column; height: 100dvh; background:
   .ty-stats { order: 3; flex-basis: 100%; }
   .ty-nav .btn { flex: 1; padding: 0 6px; font-size: 13px; }
 }
+
+/* A minion's card (tycoon/minion.ts). */
+.ty-minion-card h2 { display: flex; align-items: center; gap: 6px; }
+.ty-minion-card h2 small { color: var(--muted); font-weight: 800; }
+.ty-minion-card .dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--ink); }
+.ty-minion-card p { margin: 0 0 8px; }
+.ty-task { font-weight: 800; overflow-wrap: anywhere; }
+.ty-now, .ty-sub { font-size: 13px; font-weight: 700; color: var(--muted); overflow-wrap: anywhere; }
+.ty-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }

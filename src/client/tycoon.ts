@@ -26,6 +26,7 @@ import { repoChoices } from './shared/hiring';
 import { renderTitle } from './shared/title';
 import { drawScene, layoutRooms, type Room } from './tycoon/scene';
 import * as art from './tycoon/art';
+import { openMinion } from './tycoon/minion';
 
 const saved = loadProfile();
 store.profile = { name: saved?.name ?? 'Guest', color: saved?.color ?? AVATAR_COLORS[1], look: saved?.look ?? randomLook() };
@@ -113,7 +114,7 @@ function renderWorld() {
   const roles = roleById();
   const rooms = layoutRooms(info.roles, store.workers.values());
   natural = drawScene(world, rooms, {
-    open: openWorker,
+    open: (id) => openMinion(id, { net, openTerminal: openWorker, boardActions, roleName: (w) => roles.get(roleOf(w.prompt) ?? '')?.name }),
     hire: (room) => pickRole(room),
     roleName: (id) => roles.get(roleOf(store.workers.get(id)?.prompt) ?? '')?.name,
   });
