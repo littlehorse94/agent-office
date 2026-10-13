@@ -94,7 +94,7 @@ function renderStats() {
     `💬 ${count((s) => s === 'working' || s === 'starting')} working`,
     `🙋 ${count((s) => s === 'needs_input')} need you`,
     `✅ ${count((s) => s === 'done')} done`,
-    `💰 $${today.cost.toFixed(2)}${budget ? ` / $${budget}` : ''} today`,
+    `📊 ≈$${today.cost.toFixed(2)}${budget ? ` / $${budget}` : ''} usage today`,
   ];
   $('stats').replaceChildren(...chips.map((c) => h('span.ty-chip', {}, c)));
 }
