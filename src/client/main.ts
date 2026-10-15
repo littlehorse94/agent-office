@@ -47,6 +47,8 @@ import { installGong } from './features/gong';
 import { installGallery, installHanging } from './features/hanging';
 import { installHerald } from './features/herald';
 import { installHud } from './features/hud';
+import { installIso } from './features/iso';
+import { openMinion } from './tycoon/minion';
 import { installJukebox } from './features/jukebox';
 import { installMeeting } from './features/meeting';
 import { installNeedsYou } from './features/needsyou';
@@ -179,6 +181,9 @@ installChat(ctx);
 parts.talk = installVoice(ctx, { tv: parts.tv });
 installDictation(ctx);
 parts.hud = installHud(ctx, core, parts);
+installIso(ctx, parts, {
+  openWorker: (id) => openMinion(id, { net: parts.net, openTerminal: (w) => parts.waiting.openWorkerTerminal(w), boardActions: () => parts.actions.boardActions(), roleName: () => undefined }),
+});
 
 // ---- Main loop ---------------------------------------------------------------------------------------
 fitWindow(ctx);

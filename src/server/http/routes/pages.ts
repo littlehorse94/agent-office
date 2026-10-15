@@ -25,6 +25,8 @@ export const pageRoutes = {
   favicon: { path: '/favicon.svg', auth: 'public', handle: page('favicon.svg') },
   // The office is the tycoon view (tycoon.ts); the 3D office (index.html) is built but not served.
   office: { path: ['/', '/index.html'], auth: 'session', handle: page('tycoon.html') },
+  // The isometric view of the 3D office (features/iso): the same page, its camera fixed overhead.
+  iso: { path: '/iso', auth: 'session', handle: page('index.html') },
   // The 2D view: the workers, their terminals and the boards, without the 3D office (lite.ts).
   lite: { path: ['/lite', '/lite.html'], auth: 'session', handle: page('lite.html') },
   /** Anything else in the bundle; last, since it answers every path. */

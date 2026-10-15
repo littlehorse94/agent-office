@@ -41,6 +41,7 @@ export const routes: readonly Route[] = [
   tycoonRoutes.art,
   pageRoutes.office,
   pageRoutes.lite,
+  pageRoutes.iso,
   tycoonRoutes.page,
   pageRoutes.bundle,
 ];
