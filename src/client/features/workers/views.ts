@@ -27,6 +27,7 @@ import { renderLimits } from '../../ui/limits';
 import { modelBadge, providerLabel } from '../../ui/provider';
 import { renderUsage } from '../../ui/usage';
 import { Worker } from '../../world/character';
+import { catify, catLookFor } from '../../world/character/worker-cat';
 import { Drifters } from './adrift';
 import { Jail } from './jail';
 import { Laptop } from './laptop';
@@ -126,6 +127,8 @@ export function installWorkerViews(ctx: Ctx, core: CoreState, parts: WorkerViews
         model.setCostume(store.theme.active);
         model.setOutfit(plan().agents.outfit === 'peasant' ? 'peasant' : null);
         model.setAge(ageOf(w));
+        // A cat, in its role's colours, over whatever it was dressed in (see world/character/worker-cat.ts).
+        catify(model, catLookFor(w.prompt));
         desk.seatAnchor.add(model.root);
         // Its globe floats beside the laptop (or the kiosk's counter), out from behind the card over
         // its head and the back of its chair, so it shows from across the room.

@@ -16,7 +16,7 @@ const YAW = Math.PI / 4;
 const PITCH = THREE.MathUtils.degToRad(32);
 /** A long lens from far off, so it's all but flat (isometric), as a tycoon game draws it. */
 const DISTANCE = 140;
-const FOV_MIN = 4;
+const FOV_MIN = 2.2;
 const FOV_MAX = 16;
 /** How high the walls are cut, above the floor you're on. */
 const CUT = 2.3;
