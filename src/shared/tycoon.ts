@@ -107,3 +107,10 @@ export function slug(s: string): string {
 
 /** An art file's name is safe to look for: lowercase letters, digits and dashes. */
 export const isArtName = (name: string) => /^[a-z0-9][a-z0-9-]{0,63}$/.test(name);
+
+/** What a worker hired into a role was asked to do, without the role's brief in front of it. */
+export function taskOfPrompt(prompt: string): string {
+  if (!TAG.test(prompt)) return prompt;
+  const i = prompt.lastIndexOf('Your first task:');
+  return i >= 0 ? prompt.slice(i + 'Your first task:'.length).trim() || prompt : prompt;
+}

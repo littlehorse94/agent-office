@@ -1,7 +1,7 @@
 // The isometric view (/iso): the office seen from above at a fixed tycoon-game angle instead of
 // through your own eyes. The camera is taken over each frame (after you've moved, before the frame is
-// drawn), everything above the walls' cut line is clipped away so you look down into the rooms, your
-// own character is hidden, and the mouse drags the view, wheels the zoom and clicks a worker's desk.
+// drawn), what's above the rooms and the near walls are left out (cutaway.ts) so you look down into
+// the rooms, your own character is hidden, and the mouse drags the view, wheels the zoom and clicks a worker's desk.
 import * as THREE from 'three';
 import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
@@ -10,11 +10,15 @@ import { isoRooms } from './rooms';
 import { isoTheme } from './theme';
 import { isoToolbar } from './toolbar';
 import { isoMusic } from './music';
+import { isoHousekeeper } from './housekeeper';
+import { isoCutaway, ROOM_TOP } from './cutaway';
 import type { Net } from '../../net';
 import type { BoardActions } from '../../ui/github/prompts';
 import { openMinion } from '../../tycoon/minion';
 import { openHire, tycoonInfo } from '../../tycoon/hire';
 import { roleOf, type TycoonRole } from '../../../shared/tycoon';
+import { store } from '../../state';
+import { ROOF } from '../../../shared/rooftop';
 import './iso.css';
 
 /** Whether this page is the isometric view: always, unless asked for the walk-around office (?walk). */
@@ -27,8 +31,6 @@ const PITCH = THREE.MathUtils.degToRad(32);
 const DISTANCE = 140;
 const FOV_MIN = 2.2;
 const FOV_MAX = 16;
-/** How high the walls are cut, above the floor you're on. */
-const CUT = 2.3;
 
 export interface IsoDeps {
   net: Net;
@@ -52,6 +54,7 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
   const openWorker = (id: string) =>
     openMinion(id, { net: deps.net, openTerminal: deps.openTerminal, boardActions: deps.boardActions, roleName: (w) => roles.find((r) => r.id === roleOf(w.prompt))?.name });
   const music = isoMusic();
+  const housekeeper = isoHousekeeper(ctx, () => rooms.pods());
   const toolbar = isoToolbar({ net: deps.net, hire: () => hire(), music: () => music.toggle(), boardActions: deps.boardActions, openTerminal: deps.openTerminal });
   setInterval(() => {
     rooms.refresh();
@@ -63,10 +66,30 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
 
   let fov = 9;
   const focus = new THREE.Vector3(0, 0, 0);
-  const cut = new THREE.Plane(new THREE.Vector3(0, -1, 0), CUT);
-  // And below the floor: the street far beneath the building, the garage, the scenic loop.
+  // What's below the floor (the street far beneath the building, the garage, the scenic loop) is cut
+  // away; what's above the rooms and in front of them is left out whole (see cutaway.ts).
   const below = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-  renderer.clippingPlanes = [cut, below];
+  renderer.clippingPlanes = [below];
+  const cutaway = isoCutaway(ctx, () => parts.player.pos.y);
+  // Sharper than the walk-around office: drawn at twice the screen's pixels (or more), and its
+  // textures filtered for the low angle they're seen at from up here.
+  renderer.setPixelRatio(Math.min(3, Math.max(2, window.devicePixelRatio * 1.5)));
+  const aniso = renderer.capabilities.getMaxAnisotropy();
+  const sharpened = new WeakSet<THREE.Texture>();
+  const sharpen = () =>
+    ctx.scene.traverse((o) => {
+      const m = (o as THREE.Mesh).material as THREE.MeshToonMaterial | THREE.MeshToonMaterial[] | undefined;
+      for (const mat of Array.isArray(m) ? m : m ? [m] : []) {
+        const t = mat.map;
+        if (!t || sharpened.has(t)) continue;
+        sharpened.add(t);
+        t.anisotropy = aniso;
+        t.needsUpdate = true;
+      }
+    });
+  setInterval(sharpen, 3000);
+  const roomTop = () => parts.player.pos.y + ROOM_TOP;
+  setInterval(() => cutaway.apply(), 1500);
   /** What's round the office, instead of the sky: a plain backdrop, as a tycoon game has. */
   const backdrop = new THREE.Color('#dfeee4');
   const dir = new THREE.Vector3(Math.cos(PITCH) * Math.sin(YAW), Math.sin(PITCH), Math.cos(PITCH) * Math.cos(YAW));
@@ -100,9 +123,9 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
     }));
 
   /**
-   * The toon outline is drawn by a material of its own that the cut doesn't reach: anything that
-   * reaches above the cut (walls, the roof, the ceilings) or below the floor would leave its outline
-   * hanging in the air. Those go without one here. The outline keeps its materials from frame to
+   * The toon outline is drawn by a material of its own that the clipping doesn't reach: anything
+   * that reaches below the floor (the building's walls, down to the street) would leave its outline
+   * hanging in the air there. Those go without one here. The outline keeps its materials from frame to
    * frame, so after changing any, the office is left out of one frame for them to be made again.
    */
   const box = new THREE.Box3();
@@ -116,7 +139,7 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
       const mesh = o as THREE.Mesh;
       if (!mesh.isMesh || !mesh.geometry) return;
       box.setFromObject(mesh);
-      if (box.max.y <= floorY + CUT && box.min.y >= floorY - 0.3) return;
+      if (box.min.y >= floorY - 0.3) return;
       for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
         if (unlined.has(m)) continue;
         unlined.add(m);
@@ -128,6 +151,22 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
   }
   unlineCut();
   setInterval(unlineCut, 3000);
+
+  // Nothing to see up on the roof from here: down to the first floor instead.
+  const offTheRoof = () => {
+    if (store.floor !== ROOF) return;
+    const to = store.floors.find((f) => !f.cloning);
+    if (to) deps.net.send({ t: 'floor.go', floor: to.id });
+  };
+  store.on('floor', offTheRoof);
+  store.on('floors', offTheRoof);
+
+  // No holiday dressing here (pumpkins, the dog's hat, costumes): the office stays itself all year.
+  store.on('theme', () => {
+    if (!store.theme.active) return;
+    store.theme = { ...store.theme, active: null };
+    store.emit('theme');
+  });
 
   // Always a bright afternoon here, whatever the hour: a tycoon office is never in the dark.
   const daylight = () => ctx.sky.show({ hour: 14, weather: 'clear' });
@@ -153,12 +192,15 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
   }
 
   // After you've moved and everything's been updated, just before the frame is drawn.
-  ctx.ticks.add('hud', ({ dt }) => {
+  ctx.ticks.add('hud', ({ dt, t }) => {
+    housekeeper.update(dt, t);
+    // A car in the garage for each minion the building has hired (and any being driven).
+    const hired = store.floors.reduce((n, f) => n + (f.workers ?? 0), 0);
+    for (const car of ctx.office.cars.cars) car.root.visible = car.index < hired || car.occupied;
     if (!placed) startOverDesks();
     picking.update(dt);
     const floorY = parts.player.pos.y;
     focus.y = floorY;
-    cut.constant = floorY + CUT;
     below.constant = -(floorY - 0.3);
     // The sky keeps its own colour object and sets it every frame: this colours it after.
     if (ctx.scene.background instanceof THREE.Color) ctx.scene.background.copy(backdrop);
@@ -201,7 +243,7 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
   });
 
   // ---- The mouse: drag to look round, wheel to zoom, click a desk --------------------------------------
-  const picking = isoPicking(ctx, canvas, () => cut.constant, { openWorker, hireAt: (deskId) => hire(deskId), music: () => music.open() });
+  const picking = isoPicking(ctx, canvas, roomTop, { openWorker, hireAt: (deskId) => hire(deskId), music: () => music.open(), extra: () => [theme.props, housekeeper.root] });
   let drag: { x: number; y: number; moved: boolean } | null = null;
   canvas.addEventListener(
     'pointerdown',
@@ -255,7 +297,7 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
       raycaster.setFromCamera(new THREE.Vector2((x / r.width) * 2 - 1, -(y / r.height) * 2 + 1), camera);
       return raycaster
         .intersectObjects(ctx.scene.children, true)
-        .filter((h) => h.point.y <= cut.constant)
+        .filter((h) => h.object.visible)
         .slice(0, 3)
         .map((h) => {
           const names: string[] = [];

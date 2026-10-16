@@ -6,6 +6,7 @@
 import { spawn } from 'node:child_process';
 import os from 'node:os';
 import type { WorkerTask } from '../shared/protocol.js';
+import { taskOfPrompt } from '../shared/tycoon.js';
 
 /** What a worker has been asked and has been doing lately. */
 export interface TaskContext {
@@ -112,7 +113,8 @@ export class TaskNamer {
 
 /** The label to show while the model is still thinking, or when there is no model: the prompt. */
 export function fallbackTask(prompt: string): WorkerTask {
-  const one = prompt.replace(/\s+/g, ' ').trim();
+  // A worker hired into a role: its task, not the role's brief in front of it.
+  const one = taskOfPrompt(prompt).replace(/\s+/g, ' ').trim();
   const words = one.replace(/^(please|can you|could you|hey|ok|so)\b[\s,]*/i, '').split(' ');
   const name = words.slice(0, 4).join(' ').replace(/[\s,.;:!?-]+$/, '');
   return { name: cap(clip(name, NAME_MAX)), summary: cap(clip(one, SUMMARY_MAX)) };
@@ -121,7 +123,7 @@ export function fallbackTask(prompt: string): WorkerTask {
 function describe(ctx: TaskContext): string {
   const parts: string[] = [];
   if (ctx.previous) parts.push(`Current label:\nName: ${ctx.previous.name}\nSummary: ${ctx.previous.summary}`);
-  parts.push(`What it was asked, oldest first:\n${ctx.prompts.map((p, i) => `${i + 1}. ${clip(p, PROMPT_MAX)}`).join('\n')}`);
+  parts.push(`What it was asked, oldest first:\n${ctx.prompts.map((p, i) => `${i + 1}. ${clip(taskOfPrompt(p), PROMPT_MAX)}`).join('\n')}`);
   if (ctx.tools.length) parts.push(`What it did most recently, oldest first:\n${ctx.tools.map((t) => `- ${t}`).join('\n')}`);
   return parts.join('\n\n');
 }

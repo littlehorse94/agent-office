@@ -1,37 +1,40 @@
-// Each floor its own look in the isometric office: its project's floor tint, the colours of the rugs
-// under its pods, and props that are its own (a cat tree on Meow Money, stacks of coins on Ma Money,
-// an easel in the studio...), set round the edge of the room where there are no desks. Picked by the
-// project's name, else by a hash of it, so every floor looks the same each time.
+// Each floor its own place in the isometric office, picked by its project's name: its walls, floor,
+// desks and chairs in colours of its own, its pods' rugs, a centrepiece that's only its (the Money
+// Lab's vault, Meow Money's cat corner, the SEO Lab's server racks...) and props round the edge of the
+// room. Every prop reacts when it's clicked (see react in pick.ts). Only this floor's look changes: the
+// materials it recolours are its own copies, and the same floor looks the same every time.
 import * as THREE from 'three';
 import { FLOOR } from '../../../shared/layout';
 import type { Ctx } from '../../core/context';
 import { store } from '../../state';
-import { mesh, toon } from '../../world/toon';
 import type { Pod } from './rooms';
-
-type Prop = 'cattree' | 'yarn' | 'coins' | 'safe' | 'easel' | 'paint' | 'screen' | 'trophy' | 'globe' | 'magnifier' | 'chart' | 'bell' | 'lamp' | 'books';
+import { build, CENTREPIECES, type Centrepiece, type Prop } from './props';
 
 interface FloorTheme {
   name: string;
-  tint: string;
+  floor: string;
+  walls: string;
+  desks: string;
+  chairs: string[];
   rugs: string[];
+  centrepiece: Centrepiece;
   props: Prop[];
 }
 
 const THEMES: { match: RegExp; theme: FloorTheme }[] = [
-  { match: /dashboard/i, theme: { name: '🏢 HQ Command', tint: '#eef2ff', rugs: ['#c9d6f7', '#d7e3ff', '#bfd7f2', '#e0e4fb'], props: ['screen', 'trophy', 'chart', 'screen'] } },
-  { match: /macatting-hq|hq$/i, theme: { name: '📚 Strategy Library', tint: '#fff3e2', rugs: ['#f3d9b1', '#efc9a0', '#e8d5b7', '#f6e2c3'], props: ['books', 'globe', 'lamp', 'books'] } },
-  { match: /studio/i, theme: { name: '🎨 Creative Studio', tint: '#fff0f6', rugs: ['#f7c6dd', '#e0c3fc', '#ffd6e0', '#cdb4db'], props: ['easel', 'paint', 'easel', 'lamp'] } },
-  { match: /crm/i, theme: { name: '📞 Sales Floor', tint: '#effbf3', rugs: ['#b7e4c7', '#d8f3dc', '#a7d7c5', '#cfeee0'], props: ['bell', 'chart', 'trophy', 'bell'] } },
-  { match: /meow/i, theme: { name: '🐾 Meow Money', tint: '#fff4fa', rugs: ['#ffd1e8', '#ffe5ec', '#fbc4ab', '#f8d7e8'], props: ['cattree', 'yarn', 'coins', 'yarn'] } },
-  { match: /money/i, theme: { name: '💰 Money Lab', tint: '#f2fff0', rugs: ['#cdeac0', '#e2f5c4', '#b9e3a6', '#d9f2d0'], props: ['coins', 'safe', 'chart', 'coins'] } },
-  { match: /seo/i, theme: { name: '🔎 SEO Lab', tint: '#eefaff', rugs: ['#bde0fe', '#a2d2ff', '#cde7f0', '#d6eaf8'], props: ['magnifier', 'chart', 'screen', 'magnifier'] } },
-  { match: /life/i, theme: { name: '🧠 Second Brain', tint: '#f5f0ff', rugs: ['#ddd1f5', '#e9e1fb', '#cbc0f0', '#efe7ff'], props: ['books', 'lamp', 'globe', 'books'] } },
+  { match: /dashboard/i, theme: { name: '🏢 HQ Command', floor: '#9aa7c7', walls: '#3d4a6b', desks: '#e9edf7', chairs: ['#2b2d42', '#4361ee'], rugs: ['#4361ee', '#3a0ca3', '#4895ef', '#560bad'], centrepiece: 'boardroom', props: ['screen', 'trophy', 'chart', 'screen', 'flag', 'plant'] } },
+  { match: /macatting-hq|hq$/i, theme: { name: '📚 Strategy Library', floor: '#c99a6b', walls: '#6b4226', desks: '#8b5a3c', chairs: ['#7f1d1d', '#a16207'], rugs: ['#7f1d1d', '#9a3412', '#854d0e', '#3f6212'], centrepiece: 'library', props: ['books', 'globe', 'lamp', 'books', 'plant', 'lamp'] } },
+  { match: /studio/i, theme: { name: '🎨 Creative Studio', floor: '#ffffff', walls: '#ffafcc', desks: '#ffffff', chairs: ['#ff006e', '#8338ec', '#ffbe0b'], rugs: ['#ff006e', '#8338ec', '#3a86ff', '#ffbe0b'], centrepiece: 'gallery', props: ['easel', 'paint', 'easel', 'lamp', 'plant', 'paint'] } },
+  { match: /crm/i, theme: { name: '📞 Sales Floor', floor: '#b7e4c7', walls: '#1b4332', desks: '#f1faee', chairs: ['#2d6a4f', '#40916c'], rugs: ['#2d6a4f', '#52b788', '#1b4332', '#74c69d'], centrepiece: 'stage', props: ['bell', 'chart', 'trophy', 'bell', 'plant', 'screen'] } },
+  { match: /meow/i, theme: { name: '🐾 Meow Money', floor: '#ffe5ec', walls: '#ff8fab', desks: '#fff0f3', chairs: ['#fb6f92', '#ffc2d1'], rugs: ['#ffb3c6', '#ff8fab', '#fb6f92', '#ffc2d1'], centrepiece: 'catcorner', props: ['cattree', 'yarn', 'coins', 'yarn', 'fishbowl', 'cattree'] } },
+  { match: /money/i, theme: { name: '💰 Money Lab', floor: '#d8f3dc', walls: '#14532d', desks: '#fefae0', chairs: ['#166534', '#ca8a04'], rugs: ['#166534', '#ca8a04', '#15803d', '#a16207'], centrepiece: 'vault', props: ['coins', 'safe', 'chart', 'coins', 'plant', 'screen'] } },
+  { match: /seo/i, theme: { name: '🔎 SEO Lab', floor: '#caf0f8', walls: '#023e8a', desks: '#ffffff', chairs: ['#0077b6', '#00b4d8'], rugs: ['#0077b6', '#00b4d8', '#023e8a', '#48cae4'], centrepiece: 'servers', props: ['magnifier', 'chart', 'screen', 'magnifier', 'plant', 'chart'] } },
+  { match: /life/i, theme: { name: '🧠 Second Brain', floor: '#e9e1fb', walls: '#5a189a', desks: '#f8f4ff', chairs: ['#7b2cbf', '#c77dff'], rugs: ['#9d4edd', '#c77dff', '#7b2cbf', '#e0aaff'], centrepiece: 'brain', props: ['books', 'lamp', 'globe', 'books', 'plant', 'lamp'] } },
 ];
 
 const FALLBACK: FloorTheme[] = [
-  { name: '🌿 Green Room', tint: '#f2fbf2', rugs: ['#cfe8cf', '#e0f0d8', '#c4e0d0', '#dcefe2'], props: ['lamp', 'books', 'globe', 'trophy'] },
-  { name: '🌅 Sunset Room', tint: '#fff2ea', rugs: ['#ffd6c2', '#ffe1b8', '#f9c9b6', '#ffe9d6'], props: ['lamp', 'chart', 'paint', 'trophy'] },
+  { name: '🌿 Green Room', floor: '#e8f5e9', walls: '#2e7d32', desks: '#ffffff', chairs: ['#43a047', '#fbc02d'], rugs: ['#a5d6a7', '#81c784', '#c5e1a5', '#aed581'], centrepiece: 'library', props: ['lamp', 'books', 'globe', 'trophy', 'plant'] },
+  { name: '🌅 Sunset Room', floor: '#ffe0cc', walls: '#c2410c', desks: '#fff7ed', chairs: ['#ea580c', '#f59e0b'], rugs: ['#fdba74', '#fb923c', '#fcd34d', '#fca5a5'], centrepiece: 'stage', props: ['lamp', 'chart', 'paint', 'trophy', 'plant'] },
 ];
 
 export function themeFor(name: string): FloorTheme {
@@ -42,13 +45,35 @@ export function themeFor(name: string): FloorTheme {
   return FALLBACK[Math.abs(h) % FALLBACK.length];
 }
 
+const floorName = () => `${store.currentFloor()?.repo ?? ''} ${store.currentFloor()?.name ?? ''}`;
+
 /** Puts the floor you're on in its theme (again, when you change floor). */
 export function isoTheme(ctx: Ctx, pods: () => Pod[]) {
   const props = new THREE.Group();
   ctx.scene.add(props);
-  /** Each material's own colour, from before any theme, to tint from. */
-  const original = new WeakMap<THREE.MeshToonMaterial, THREE.Color>();
+  /** Each mesh's own material (or materials, one a face) from before any theme, to recolour copies of. */
+  const original = new WeakMap<THREE.Mesh, THREE.Material | THREE.Material[]>();
   let applied = '';
+  const box = new THREE.Box3();
+  const c = new THREE.Vector3();
+
+  /** Gives `mesh` a copy of its own material, in `color` (or multiplied by it, to keep its pattern). */
+  function paint(mesh: THREE.Mesh, color: string, multiply = false) {
+    if (!original.has(mesh)) original.set(mesh, mesh.material);
+    const base = original.get(mesh)!;
+    const tint = new THREE.Color(color);
+    const recolour = (b: THREE.Material, now: THREE.Material) => {
+      const from = (b as THREE.MeshToonMaterial).color;
+      if (!from) return now;
+      const copy = (now === b ? b.clone() : now) as THREE.MeshToonMaterial;
+      copy.color.copy(multiply ? from.clone().multiply(tint) : tint);
+      return copy;
+    };
+    if (Array.isArray(base)) {
+      const now = mesh.material as THREE.Material[];
+      mesh.material = base.map((b, i) => recolour(b, now[i]));
+    } else mesh.material = recolour(base, mesh.material as THREE.Material);
+  }
 
   function apply() {
     const f = store.currentFloor();
@@ -57,129 +82,97 @@ export function isoTheme(ctx: Ctx, pods: () => Pod[]) {
     const key = `${f.id}|${ps.length}`;
     if (key === applied || !ps.length) return;
     applied = key;
-    const theme = themeFor(`${f.repo ?? ''} ${f.name}`);
-    const box = new THREE.Box3();
+    const theme = themeFor(floorName());
+    const y = ps[0].center.y;
+
+    // The desks and their chairs.
+    const deskParts = new Set<THREE.Object3D>();
+    ps.forEach((p, pi) =>
+      p.desks.forEach((d, di) => {
+        d.chair.traverse((o) => {
+          deskParts.add(o);
+          if ((o as THREE.Mesh).isMesh) paint(o as THREE.Mesh, theme.chairs[(pi + di) % theme.chairs.length]);
+        });
+        d.group.traverse((o) => {
+          const m = o as THREE.Mesh;
+          if (!m.isMesh || deskParts.has(o)) return;
+          deskParts.add(o);
+          box.setFromObject(m);
+          const top = box.max.y - y;
+          // The desktop: the widest, flattest piece at desk height.
+          if (top > 0.6 && top < 0.95 && box.max.x - box.min.x > 0.8) paint(m, theme.desks);
+        });
+      }),
+    );
+
+    // The floor, the walls and the rugs.
     ctx.office.group.traverse((o) => {
       const m = o as THREE.Mesh;
-      const mat = m.material as THREE.MeshToonMaterial;
-      if (!m.isMesh || Array.isArray(mat) || !mat?.color) return;
+      if (!m.isMesh || deskParts.has(o) || props.children.includes(o)) return;
       box.setFromObject(m);
+      if (box.isEmpty()) return;
       const w = box.max.x - box.min.x;
       const d = box.max.z - box.min.z;
-      if (box.max.y > 0.05 || box.min.y < -0.05 || w * d < 6) return;
-      if (!original.has(mat)) original.set(mat, mat.color.clone());
-      const base = original.get(mat)!;
-      // The floor itself: tinted.
-      if (w * d > 150) return void mat.color.copy(base).multiply(new THREE.Color(theme.tint));
-      // A rug under a pod: its pod's colour.
-      const c = box.getCenter(new THREE.Vector3());
-      const i = ps.findIndex((p) => Math.hypot(p.center.x - c.x, p.center.z - c.z) < 1.2);
-      if (i >= 0) mat.color.set(theme.rugs[i % theme.rugs.length]);
+      const h = box.max.y - box.min.y;
+      const flat = box.max.y - y < 0.5 && box.min.y - y > -0.5 && h < 0.1;
+      if (flat && w * d > 150) return paint(m, theme.floor, true);
+      if (flat && w * d > 6) {
+        box.getCenter(c);
+        const i = ps.findIndex((p) => Math.hypot(p.center.x - c.x, p.center.z - c.z) < 1.2);
+        if (i >= 0) paint(m, theme.rugs[i % theme.rugs.length]);
+        return;
+      }
+      // A wall: tall, thin, standing on the floor, along the room's edge.
+      const thin = Math.min(w, d) < 0.6 && Math.max(w, d) > 2;
+      box.getCenter(c);
+      const edge = c.x < FLOOR.minX + 1.5 || c.x > FLOOR.maxX - 1.5 || c.z < FLOOR.minZ + 1.5 || c.z > FLOOR.maxZ - 1.5;
+      if (thin && edge && h > 2.4 && box.min.y - y < 0.6) paint(m, theme.walls, true);
     });
-    placeProps(theme, ps);
+
+    placeProps(theme, ps, y);
     store.emit('floors');
   }
 
-  /** The theme's props, round the room's edge, wherever no desk is near. */
-  function placeProps(theme: FloorTheme, ps: Pod[]) {
+  /** Whether a spot on the floor is clear of the office's own things (and of every desk), by `r` m. */
+  function clear(x: number, z: number, r: number, desks: THREE.Vector3[], y: number): boolean {
+    if (desks.some((d) => Math.hypot(d.x - x, d.z - z) < r + 1.6)) return false;
+    return ctx.office.colliders.every((k) => (k.bottom ?? 0) > y + 2 || k.top < y + 0.05 || x < k.minX - r || x > k.maxX + r || z < k.minZ - r || z > k.maxZ + r);
+  }
+
+  /** The centrepiece in the room's most open spot, then the props round its edge. */
+  function placeProps(theme: FloorTheme, ps: Pod[], y: number) {
     props.clear();
-    const y = ps[0].center.y - 0.4;
-    const spots: [number, number][] = [];
-    for (let x = FLOOR.minX + 2; x <= FLOOR.maxX - 2; x += 3) spots.push([x, FLOOR.minZ + 1.6], [x, FLOOR.maxZ - 1.6]);
-    for (let z = FLOOR.minZ + 3; z <= FLOOR.maxZ - 3; z += 3) spots.push([FLOOR.minX + 1.6, z], [FLOOR.maxX - 1.6, z]);
     const desks = ps.flatMap((p) => p.desks.map((d) => d.group.getWorldPosition(new THREE.Vector3())));
-    const clear = spots.filter(([x, z]) => desks.every((d) => Math.hypot(d.x - x, d.z - z) > 3));
-    // Spread out: every few spots round the edge.
-    const step = Math.max(1, Math.floor(clear.length / 8));
+    // The centrepiece: the clear spot nearest the middle of the room with the most room round it.
+    const big = CENTREPIECES[theme.centrepiece];
+    let best: [number, number] | null = null;
+    for (let x = FLOOR.minX + 3; x <= FLOOR.maxX - 3; x += 1)
+      for (let z = FLOOR.minZ + 3; z <= FLOOR.maxZ - 3; z += 1) {
+        if (!clear(x, z, big.radius, desks, y)) continue;
+        if (!best || Math.hypot(x, z) < Math.hypot(...best)) best = [x, z];
+      }
+    if (best) {
+      const g = build(theme.centrepiece);
+      g.position.set(best[0], y, best[1]);
+      props.add(g);
+    }
+    const taken = best ? [new THREE.Vector3(best[0], y, best[1])] : [];
+    const spots: [number, number][] = [];
+    for (let x = FLOOR.minX + 1.4; x <= FLOOR.maxX - 1.4; x += 1.5) spots.push([x, FLOOR.minZ + 1.4], [x, FLOOR.maxZ - 1.4]);
+    for (let z = FLOOR.minZ + 2.9; z <= FLOOR.maxZ - 2.9; z += 1.5) spots.push([FLOOR.minX + 1.4, z], [FLOOR.maxX - 1.4, z]);
     let n = 0;
-    for (let i = 0; i < clear.length && n < 8; i += step, n++) {
-      const prop = build(theme.props[n % theme.props.length]);
-      prop.position.set(clear[i][0], Math.max(0, y), clear[i][1]);
-      prop.rotation.y = (n * Math.PI) / 3;
-      props.add(prop);
+    for (const [x, z] of spots) {
+      if (n >= 12) break;
+      if (!clear(x, z, 0.6, [...desks, ...taken.map((t) => t.clone().setY(-999))], y)) continue;
+      if (taken.some((t) => Math.hypot(t.x - x, t.z - z) < (t === taken[0] && best ? big.radius + 1 : 2.4))) continue;
+      const g = build(theme.props[n % theme.props.length]);
+      g.position.set(x, y, z);
+      g.rotation.y = Math.atan2(-x, -z);
+      props.add(g);
+      taken.push(new THREE.Vector3(x, y, z));
+      n++;
     }
   }
 
-  return { apply, nameOf: () => themeFor(`${store.currentFloor()?.repo ?? ''} ${store.currentFloor()?.name ?? ''}`).name };
-}
-
-// ---- The props: a few shapes each, in the office's toon style ----------------------------------------
-const C = { gold: '#f4c542', wood: '#b07f48', ink: '#2b2d42', white: '#ffffff', red: '#ef476f', blue: '#5bc0eb', green: '#06d6a0', pink: '#ffafcc', grey: '#8d99ae', cream: '#fff3e2' };
-
-function build(kind: Prop): THREE.Group {
-  const g = new THREE.Group();
-  const add = (geo: THREE.BufferGeometry, color: string, x: number, y: number, z: number) => g.add(mesh(geo, toon(color), x, y, z));
-  switch (kind) {
-    case 'cattree':
-      add(new THREE.CylinderGeometry(0.08, 0.08, 1.4, 10), C.cream, 0, 0.7, 0);
-      for (const [y, r] of [[0.05, 0.45], [0.75, 0.32], [1.4, 0.38]] as const) add(new THREE.CylinderGeometry(r, r, 0.08, 18), C.pink, 0, y, 0);
-      add(new THREE.SphereGeometry(0.1, 12, 10), C.red, 0.25, 0.9, 0);
-      break;
-    case 'yarn':
-      for (const [x, c] of [[0, C.red], [0.32, C.blue], [-0.25, C.green]] as const) {
-        add(new THREE.SphereGeometry(0.16, 14, 12), c, x, 0.16, (x * 0.7) % 0.2);
-      }
-      break;
-    case 'coins':
-      for (let i = 0; i < 3; i++) for (let k = 0; k < 4 + i * 2; k++) add(new THREE.CylinderGeometry(0.14, 0.14, 0.05, 16), C.gold, i * 0.32 - 0.32, 0.03 + k * 0.055, (i % 2) * 0.2);
-      break;
-    case 'safe':
-      add(new THREE.BoxGeometry(0.7, 0.75, 0.6), C.grey, 0, 0.38, 0);
-      add(new THREE.TorusGeometry(0.12, 0.03, 8, 20), C.gold, 0, 0.42, 0.31);
-      break;
-    case 'easel':
-      for (const sx of [-1, 1]) {
-        const leg = mesh(new THREE.BoxGeometry(0.05, 1.6, 0.05), toon(C.wood), sx * 0.3, 0.8, 0);
-        leg.rotation.z = sx * -0.15;
-        g.add(leg);
-      }
-      add(new THREE.BoxGeometry(0.8, 0.6, 0.04), C.white, 0, 1.15, 0.06);
-      add(new THREE.BoxGeometry(0.5, 0.3, 0.01), C.pink, 0, 1.18, 0.09);
-      break;
-    case 'paint':
-      for (const [x, c] of [[0, C.red], [0.32, C.blue], [0.16, C.gold]] as const) add(new THREE.CylinderGeometry(0.13, 0.13, 0.28, 14), c, x, 0.14, x * 0.6 - 0.1);
-      break;
-    case 'screen':
-      add(new THREE.BoxGeometry(0.08, 1.0, 0.08), C.ink, 0, 0.5, 0);
-      add(new THREE.BoxGeometry(1.3, 0.8, 0.08), C.ink, 0, 1.3, 0);
-      g.add(mesh(new THREE.BoxGeometry(1.16, 0.66, 0.02), toon('#7ad3f0', { emissive: '#3aa7d0' }), 0, 1.3, 0.05));
-      for (let i = 0; i < 4; i++) add(new THREE.BoxGeometry(0.16, 0.12 + i * 0.1, 0.02), C.green, -0.4 + i * 0.27, 1.06 + (0.12 + i * 0.1) / 2, 0.07);
-      break;
-    case 'trophy':
-      add(new THREE.BoxGeometry(0.4, 0.5, 0.4), C.wood, 0, 0.25, 0);
-      add(new THREE.CylinderGeometry(0.16, 0.06, 0.3, 14), C.gold, 0, 0.7, 0);
-      add(new THREE.TorusGeometry(0.1, 0.025, 8, 16), C.gold, 0.17, 0.72, 0);
-      break;
-    case 'globe':
-      add(new THREE.CylinderGeometry(0.18, 0.22, 0.08, 14), C.wood, 0, 0.04, 0);
-      add(new THREE.CylinderGeometry(0.03, 0.03, 0.7, 8), C.wood, 0, 0.4, 0);
-      add(new THREE.SphereGeometry(0.28, 18, 14), C.blue, 0, 0.95, 0);
-      add(new THREE.SphereGeometry(0.12, 10, 8), C.green, 0.12, 1.05, 0.18);
-      break;
-    case 'magnifier':
-      g.add(mesh(new THREE.TorusGeometry(0.35, 0.06, 10, 24), toon(C.ink), 0, 1.0, 0));
-      g.add(mesh(new THREE.CircleGeometry(0.32, 24), toon('#cdeffd', { transparent: true, opacity: 0.6 }), 0, 1.0, 0.01));
-      add(new THREE.CylinderGeometry(0.05, 0.05, 0.6, 8), C.wood, 0, 0.4, 0);
-      break;
-    case 'chart':
-      for (let i = 0; i < 4; i++) add(new THREE.BoxGeometry(0.2, 0.3 + i * 0.25, 0.2), [C.blue, C.green, C.gold, C.red][i], -0.36 + i * 0.24, (0.3 + i * 0.25) / 2, 0);
-      break;
-    case 'bell':
-      add(new THREE.CylinderGeometry(0.2, 0.25, 0.9, 12), C.wood, 0, 0.45, 0);
-      add(new THREE.ConeGeometry(0.2, 0.25, 16), C.gold, 0, 1.03, 0);
-      break;
-    case 'lamp':
-      add(new THREE.CylinderGeometry(0.03, 0.03, 1.5, 8), C.ink, 0, 0.75, 0);
-      add(new THREE.CylinderGeometry(0.18, 0.25, 0.08, 14), C.ink, 0, 0.04, 0);
-      g.add(mesh(new THREE.ConeGeometry(0.28, 0.3, 16, 1, true), toon('#ffe6a7', { emissive: '#ffd166' }), 0, 1.55, 0));
-      break;
-    case 'books':
-      for (let i = 0; i < 5; i++) {
-        const b = mesh(new THREE.BoxGeometry(0.12, 0.42, 0.32), toon([C.red, C.blue, C.green, C.gold, C.pink][i]), -0.3 + i * 0.14, 0.21, 0);
-        b.rotation.z = i === 4 ? 0.3 : 0;
-        g.add(b);
-      }
-      break;
-  }
-  return g;
+  return { apply, nameOf: () => themeFor(floorName()).name, props };
 }

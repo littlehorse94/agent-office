@@ -72,6 +72,14 @@ const loading = loadingScreen(onModelsProgress);
 // Came here from the 2D view's 🏢 3D button: it isn't offered straight back.
 const chose3d = new URLSearchParams(location.search).has('3d');
 if (chose3d) history.replaceState(null, '', location.pathname);
+// The isometric view always opens on a floor of the office (never up on the roof, or wherever you last stood).
+if (isIso()) {
+  try {
+    localStorage.removeItem('agent-office.spot');
+  } catch {
+    // storage blocked: nothing to forget
+  }
+}
 /** Offers the 2D view (/lite) where the 3D is hard going. */
 // The isometric view works on a phone, and isn't the walk-around office the 2D view stands in for.
 const offer2d = (why: 'touch' | 'slow') => chose3d || isIso() || offerLite(why);
