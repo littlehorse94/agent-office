@@ -5,8 +5,16 @@
 import * as THREE from 'three';
 import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
-import { store } from '../../state';
-import type { Interactable } from '../../world/types';
+import { isoPicking } from './pick';
+import { isoRooms } from './rooms';
+import { isoTheme } from './theme';
+import { isoToolbar } from './toolbar';
+import type { Net } from '../../net';
+import type { BoardActions } from '../../ui/github/prompts';
+import { openMinion } from '../../tycoon/minion';
+import { openHire, tycoonInfo } from '../../tycoon/hire';
+import { roleOf, type TycoonRole } from '../../../shared/tycoon';
+import './iso.css';
 
 /** Whether this page is the isometric view: always, unless asked for the walk-around office (?walk). */
 export const isIso = () => !new URLSearchParams(location.search).has('walk');
@@ -22,13 +30,32 @@ const FOV_MAX = 16;
 const CUT = 2.3;
 
 export interface IsoDeps {
-  /** A worker's desk was clicked. */
-  openWorker(id: string): void;
+  net: Net;
+  openTerminal(id: string): void;
+  boardActions(): BoardActions;
 }
 
 export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player'>, deps: IsoDeps) {
   if (!isIso()) return;
   document.body.classList.add('iso');
+
+  // The roles the building has (for the rooms, the hiring and each minion's card), once they're in.
+  let roles: readonly TycoonRole[] = [];
+  void tycoonInfo().then((i) => (roles = i.roles));
+  const rooms = isoRooms(ctx, () => roles);
+  const theme = isoTheme(ctx, () => {
+    rooms.refresh();
+    return rooms.pods();
+  });
+  const hire = (deskId?: string) => void openHire(deps.net, { deskId, deskFor: rooms.deskFor });
+  const openWorker = (id: string) =>
+    openMinion(id, { net: deps.net, openTerminal: deps.openTerminal, boardActions: deps.boardActions, roleName: (w) => roles.find((r) => r.id === roleOf(w.prompt))?.name });
+  const toolbar = isoToolbar({ net: deps.net, hire: () => hire(), boardActions: deps.boardActions, openTerminal: deps.openTerminal });
+  setInterval(() => {
+    rooms.refresh();
+    theme.apply();
+    toolbar.setTitle(theme.nameOf());
+  }, 1000);
   const { camera, renderer, canvas } = ctx;
   parts.player.setView('third');
 
@@ -124,8 +151,9 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
   }
 
   // After you've moved and everything's been updated, just before the frame is drawn.
-  ctx.ticks.add('hud', () => {
+  ctx.ticks.add('hud', ({ dt }) => {
     if (!placed) startOverDesks();
+    picking.update(dt);
     const floorY = parts.player.pos.y;
     focus.y = floorY;
     cut.constant = floorY + CUT;
@@ -171,6 +199,7 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
   });
 
   // ---- The mouse: drag to look round, wheel to zoom, click a desk --------------------------------------
+  const picking = isoPicking(ctx, canvas, () => cut.constant, { openWorker, hireAt: (deskId) => hire(deskId) });
   let drag: { x: number; y: number; moved: boolean } | null = null;
   canvas.addEventListener(
     'pointerdown',
@@ -183,7 +212,12 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
   // The office's own clicks (using what's under the mouse, walking there) are the 3D view's, not this one's.
   for (const type of ['mousedown', 'mouseup', 'click', 'dblclick', 'contextmenu'] as const) canvas.addEventListener(type, (e) => e.stopImmediatePropagation(), true);
   window.addEventListener('pointermove', (e) => {
-    if (!drag || !(e.buttons & 1)) return;
+    if (!drag || !(e.buttons & 1)) {
+      if (e.target === canvas) picking.hover(e);
+      else picking.hideTip();
+      return;
+    }
+    picking.hideTip();
     const dx = e.clientX - drag.x;
     const dy = e.clientY - drag.y;
     if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
@@ -199,7 +233,7 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
   window.addEventListener('pointerup', (e) => {
     const d = drag;
     drag = null;
-    if (d && !d.moved && e.target === canvas) click(e);
+    if (d && !d.moved && e.target === canvas) picking.click(e);
   });
   canvas.addEventListener(
     'wheel',
@@ -212,7 +246,6 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
   );
 
   const raycaster = new THREE.Raycaster();
-  const ndc = new THREE.Vector2();
   // Debug handle: what's under a point on the screen (for tuning what's cut away).
   (window as any).__iso = {
     pick(x: number, y: number) {
@@ -230,17 +263,4 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
     },
     focus,
   };
-  function click(e: PointerEvent) {
-    const r = canvas.getBoundingClientRect();
-    ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
-    raycaster.setFromCamera(ndc, camera);
-    for (const hit of raycaster.intersectObjects([ctx.office.group, ...ctx.usables.pickables()], true)) {
-      if (hit.point.y > cut.constant) continue;
-      let it: Interactable | undefined;
-      for (let o: THREE.Object3D | null = hit.object; o && !it; o = o.parent) it = o.userData.interact as Interactable | undefined;
-      const w = it?.deskId ? store.workerAtDesk(it.deskId) : undefined;
-      if (w) return deps.openWorker(w.id);
-      if (it) return;
-    }
-  }
 }
