@@ -23,8 +23,8 @@ export const pageRoutes = {
   claim: { path: ['/claim', '/claim.html'], auth: 'public', handle: page('claim.html') },
   join: { path: ['/join', '/join.html'], auth: 'public', handle: page('join.html') },
   favicon: { path: '/favicon.svg', auth: 'public', handle: page('favicon.svg') },
-  // The office is the tycoon view (tycoon.ts); the 3D office (index.html) is built but not served.
-  office: { path: ['/', '/index.html'], auth: 'session', handle: page('tycoon.html') },
+  // The office, seen from a fixed isometric camera (features/iso); the flat tycoon view is at /tycoon.
+  office: { path: ['/', '/index.html'], auth: 'session', handle: page('index.html') },
   // The isometric view of the 3D office (features/iso): the same page, its camera fixed overhead.
   iso: { path: '/iso', auth: 'session', handle: page('index.html') },
   // The 2D view: the workers, their terminals and the boards, without the 3D office (lite.ts).

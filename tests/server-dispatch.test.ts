@@ -216,8 +216,7 @@ test('signs in with the office password', async () => {
 test('answers the signed-in routes', async () => {
   const me = { cookie };
   assert.deepEqual(await (await get('/api/whoami', me)).json(), { ok: true, me: { admin: true } });
-  // The office is the tycoon view.
-  assert.match(await (await get('/', me)).text(), /<title>tycoon<\/title>/);
+  assert.match(await (await get('/', me)).text(), /<title>index<\/title>/);
   assert.match(await (await get('/lite', me)).text(), /<title>lite<\/title>/);
   const floor = office.floors()[0].id;
   assert.deepEqual(await (await get(`/api/search?q=zzzz&floor=${floor}`, me)).json(), { q: 'zzzz', chat: [], terminals: [], more: false });

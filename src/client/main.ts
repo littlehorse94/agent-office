@@ -1,7 +1,8 @@
 import './style.css';
 import { Net } from './net';
 import { DesktopNotifier } from './notify';
-import { store, loadProfile, loadSettings } from './state';
+import { store, loadProfile, loadSettings, saveProfile } from './state';
+import { randomLook } from '../shared/avatar';
 import { PlayerController, groundAt } from './player';
 import { Hands } from './world/hands';
 import { Confetti } from './world/confetti';
@@ -47,7 +48,7 @@ import { installGong } from './features/gong';
 import { installGallery, installHanging } from './features/hanging';
 import { installHerald } from './features/herald';
 import { installHud } from './features/hud';
-import { installIso } from './features/iso';
+import { installIso, isIso } from './features/iso';
 import { openMinion } from './tycoon/minion';
 import { installJukebox } from './features/jukebox';
 import { installMeeting } from './features/meeting';
@@ -73,7 +74,8 @@ const loading = loadingScreen(onModelsProgress);
 const chose3d = new URLSearchParams(location.search).has('3d');
 if (chose3d) history.replaceState(null, '', location.pathname);
 /** Offers the 2D view (/lite) where the 3D is hard going. */
-const offer2d = (why: 'touch' | 'slow') => chose3d || offerLite(why);
+// The isometric view works on a phone, and isn't the walk-around office the 2D view stands in for.
+const offer2d = (why: 'touch' | 'slow') => chose3d || isIso() || offerLite(why);
 // A phone can't walk around the office: the 2D view is made for it.
 if (touchOnly()) offer2d('touch');
 // The models made in Blender, loaded before the world they're in is built (see world/models.ts).
@@ -208,7 +210,12 @@ async function whoami() {
 }
 
 void whoami().then(() => {
-  const saved = loadProfile();
+  let saved = loadProfile();
+  // Nobody sees you in the isometric view: no character to pick, one is made up.
+  if (isIso() && !saved?.look) {
+    saved = { name: saved?.name ?? store.profile.name, color: saved?.color ?? store.profile.color, look: randomLook() };
+    saveProfile(saved);
+  }
   if (saved && store.me.account) saved.name = store.me.account.name;
   if (store.me.account) store.profile.name = store.me.account.name;
   store.emit('me');

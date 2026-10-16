@@ -8,8 +8,8 @@ import type { Parts } from '../../core/parts';
 import { store } from '../../state';
 import type { Interactable } from '../../world/types';
 
-/** Whether this page is the isometric view. */
-export const isIso = () => location.pathname === '/iso' || new URLSearchParams(location.search).has('iso');
+/** Whether this page is the isometric view: always, unless asked for the walk-around office (?walk). */
+export const isIso = () => !new URLSearchParams(location.search).has('walk');
 
 /** The tycoon angle: 45° round, looking down 32°. */
 const YAW = Math.PI / 4;
@@ -105,8 +105,27 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
   daylight();
   setInterval(daylight, 2000);
 
+  /** Where the view starts: over the middle of the floor's desks, once they're there. */
+  let placed = false;
+  function startOverDesks() {
+    const at = new THREE.Vector3();
+    const sum = new THREE.Vector3();
+    let n = 0;
+    for (const d of ctx.world().desks.values()) {
+      if (d.def.station || d.def.room) continue;
+      d.group.getWorldPosition(at);
+      sum.add(at);
+      n++;
+    }
+    if (!n) return;
+    focus.x = sum.x / n;
+    focus.z = sum.z / n;
+    placed = true;
+  }
+
   // After you've moved and everything's been updated, just before the frame is drawn.
   ctx.ticks.add('hud', () => {
+    if (!placed) startOverDesks();
     const floorY = parts.player.pos.y;
     focus.y = floorY;
     cut.constant = floorY + CUT;
