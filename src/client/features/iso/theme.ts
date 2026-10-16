@@ -19,22 +19,30 @@ interface FloorTheme {
   rugs: string[];
   centrepiece: Centrepiece;
   props: Prop[];
+  /** How each pod's desks stand (see arrange). */
+  layout: Layout;
 }
 
+/**
+ * The ways a pod's four desks can stand round its middle: as built (two facing pairs), in a row all
+ * facing the same way, in a ring facing in, turning round it like a pinwheel, or as built turned 45°.
+ */
+type Layout = 'cluster' | 'row' | 'ring' | 'pinwheel' | 'diagonal';
+
 const THEMES: { match: RegExp; theme: FloorTheme }[] = [
-  { match: /dashboard/i, theme: { name: '🏢 HQ Command', floor: '#9aa7c7', walls: '#3d4a6b', desks: '#e9edf7', chairs: ['#2b2d42', '#4361ee'], rugs: ['#4361ee', '#3a0ca3', '#4895ef', '#560bad'], centrepiece: 'boardroom', props: ['screen', 'trophy', 'chart', 'screen', 'flag', 'plant'] } },
-  { match: /macatting-hq|hq$/i, theme: { name: '📚 Strategy Library', floor: '#c99a6b', walls: '#6b4226', desks: '#8b5a3c', chairs: ['#7f1d1d', '#a16207'], rugs: ['#7f1d1d', '#9a3412', '#854d0e', '#3f6212'], centrepiece: 'library', props: ['books', 'globe', 'lamp', 'books', 'plant', 'lamp'] } },
-  { match: /studio/i, theme: { name: '🎨 Creative Studio', floor: '#ffffff', walls: '#ffafcc', desks: '#ffffff', chairs: ['#ff006e', '#8338ec', '#ffbe0b'], rugs: ['#ff006e', '#8338ec', '#3a86ff', '#ffbe0b'], centrepiece: 'gallery', props: ['easel', 'paint', 'easel', 'lamp', 'plant', 'paint'] } },
-  { match: /crm/i, theme: { name: '📞 Sales Floor', floor: '#b7e4c7', walls: '#1b4332', desks: '#f1faee', chairs: ['#2d6a4f', '#40916c'], rugs: ['#2d6a4f', '#52b788', '#1b4332', '#74c69d'], centrepiece: 'stage', props: ['bell', 'chart', 'trophy', 'bell', 'plant', 'screen'] } },
-  { match: /meow/i, theme: { name: '🐾 Meow Money', floor: '#ffe5ec', walls: '#ff8fab', desks: '#fff0f3', chairs: ['#fb6f92', '#ffc2d1'], rugs: ['#ffb3c6', '#ff8fab', '#fb6f92', '#ffc2d1'], centrepiece: 'catcorner', props: ['cattree', 'yarn', 'coins', 'yarn', 'fishbowl', 'cattree'] } },
-  { match: /money/i, theme: { name: '💰 Money Lab', floor: '#d8f3dc', walls: '#14532d', desks: '#fefae0', chairs: ['#166534', '#ca8a04'], rugs: ['#166534', '#ca8a04', '#15803d', '#a16207'], centrepiece: 'vault', props: ['coins', 'safe', 'chart', 'coins', 'plant', 'screen'] } },
-  { match: /seo/i, theme: { name: '🔎 SEO Lab', floor: '#caf0f8', walls: '#023e8a', desks: '#ffffff', chairs: ['#0077b6', '#00b4d8'], rugs: ['#0077b6', '#00b4d8', '#023e8a', '#48cae4'], centrepiece: 'servers', props: ['magnifier', 'chart', 'screen', 'magnifier', 'plant', 'chart'] } },
-  { match: /life/i, theme: { name: '🧠 Second Brain', floor: '#e9e1fb', walls: '#5a189a', desks: '#f8f4ff', chairs: ['#7b2cbf', '#c77dff'], rugs: ['#9d4edd', '#c77dff', '#7b2cbf', '#e0aaff'], centrepiece: 'brain', props: ['books', 'lamp', 'globe', 'books', 'plant', 'lamp'] } },
+  { match: /dashboard/i, theme: { name: '🏢 HQ Command', floor: '#9aa7c7', walls: '#3d4a6b', desks: '#e9edf7', chairs: ['#2b2d42', '#4361ee'], rugs: ['#4361ee', '#3a0ca3', '#4895ef', '#560bad'], centrepiece: 'boardroom', props: ['screen', 'trophy', 'chart', 'screen', 'flag', 'plant'], layout: 'row' } },
+  { match: /macatting-hq|hq$/i, theme: { name: '📚 Strategy Library', floor: '#c99a6b', walls: '#6b4226', desks: '#8b5a3c', chairs: ['#7f1d1d', '#a16207'], rugs: ['#7f1d1d', '#9a3412', '#854d0e', '#3f6212'], centrepiece: 'library', props: ['books', 'globe', 'lamp', 'books', 'plant', 'lamp'], layout: 'ring' } },
+  { match: /studio/i, theme: { name: '🎨 Creative Studio', floor: '#ffffff', walls: '#ffafcc', desks: '#ffffff', chairs: ['#ff006e', '#8338ec', '#ffbe0b'], rugs: ['#ff006e', '#8338ec', '#3a86ff', '#ffbe0b'], centrepiece: 'gallery', props: ['easel', 'paint', 'easel', 'lamp', 'plant', 'paint'], layout: 'pinwheel' } },
+  { match: /crm/i, theme: { name: '📞 Sales Floor', floor: '#b7e4c7', walls: '#1b4332', desks: '#f1faee', chairs: ['#2d6a4f', '#40916c'], rugs: ['#2d6a4f', '#52b788', '#1b4332', '#74c69d'], centrepiece: 'stage', props: ['bell', 'chart', 'trophy', 'bell', 'plant', 'screen'], layout: 'row' } },
+  { match: /meow/i, theme: { name: '🐾 Meow Money', floor: '#ffe5ec', walls: '#ff8fab', desks: '#fff0f3', chairs: ['#fb6f92', '#ffc2d1'], rugs: ['#ffb3c6', '#ff8fab', '#fb6f92', '#ffc2d1'], centrepiece: 'catcorner', props: ['cattree', 'yarn', 'coins', 'yarn', 'fishbowl', 'cattree'], layout: 'ring' } },
+  { match: /money/i, theme: { name: '💰 Money Lab', floor: '#d8f3dc', walls: '#14532d', desks: '#fefae0', chairs: ['#166534', '#ca8a04'], rugs: ['#166534', '#ca8a04', '#15803d', '#a16207'], centrepiece: 'vault', props: ['coins', 'safe', 'chart', 'coins', 'plant', 'screen'], layout: 'diagonal' } },
+  { match: /seo/i, theme: { name: '🔎 SEO Lab', floor: '#caf0f8', walls: '#023e8a', desks: '#ffffff', chairs: ['#0077b6', '#00b4d8'], rugs: ['#0077b6', '#00b4d8', '#023e8a', '#48cae4'], centrepiece: 'servers', props: ['magnifier', 'chart', 'screen', 'magnifier', 'plant', 'chart'], layout: 'row' } },
+  { match: /life/i, theme: { name: '🧠 Second Brain', floor: '#e9e1fb', walls: '#5a189a', desks: '#f8f4ff', chairs: ['#7b2cbf', '#c77dff'], rugs: ['#9d4edd', '#c77dff', '#7b2cbf', '#e0aaff'], centrepiece: 'brain', props: ['books', 'lamp', 'globe', 'books', 'plant', 'lamp'], layout: 'pinwheel' } },
 ];
 
 const FALLBACK: FloorTheme[] = [
-  { name: '🌿 Green Room', floor: '#e8f5e9', walls: '#2e7d32', desks: '#ffffff', chairs: ['#43a047', '#fbc02d'], rugs: ['#a5d6a7', '#81c784', '#c5e1a5', '#aed581'], centrepiece: 'library', props: ['lamp', 'books', 'globe', 'trophy', 'plant'] },
-  { name: '🌅 Sunset Room', floor: '#ffe0cc', walls: '#c2410c', desks: '#fff7ed', chairs: ['#ea580c', '#f59e0b'], rugs: ['#fdba74', '#fb923c', '#fcd34d', '#fca5a5'], centrepiece: 'stage', props: ['lamp', 'chart', 'paint', 'trophy', 'plant'] },
+  { name: '🌿 Green Room', floor: '#e8f5e9', walls: '#2e7d32', desks: '#ffffff', chairs: ['#43a047', '#fbc02d'], rugs: ['#a5d6a7', '#81c784', '#c5e1a5', '#aed581'], centrepiece: 'library', props: ['lamp', 'books', 'globe', 'trophy', 'plant'], layout: 'diagonal' },
+  { name: '🌅 Sunset Room', floor: '#ffe0cc', walls: '#c2410c', desks: '#fff7ed', chairs: ['#ea580c', '#f59e0b'], rugs: ['#fdba74', '#fb923c', '#fcd34d', '#fca5a5'], centrepiece: 'stage', props: ['lamp', 'chart', 'paint', 'trophy', 'plant'], layout: 'pinwheel' },
 ];
 
 export function themeFor(name: string): FloorTheme {
@@ -75,15 +83,29 @@ export function isoTheme(ctx: Ctx, pods: () => Pod[]) {
     } else mesh.material = recolour(base, mesh.material as THREE.Material);
   }
 
+  /** Where each desk was built, to arrange the pods from (and put back). */
+  const home = new WeakMap<THREE.Object3D, { x: number; z: number; rotY: number }>();
+
   function apply() {
     const f = store.currentFloor();
     if (!f) return;
-    const ps = pods();
-    const key = `${f.id}|${ps.length}`;
-    if (key === applied || !ps.length) return;
+    const key = `${f.id}|${pods().length}`;
+    if (key === applied || !pods().length) return;
     applied = key;
+    // Every desk back where it was built, then this floor's own layout.
+    for (const d of ctx.world().desks.values()) {
+      const h = home.get(d.group);
+      if (!h) home.set(d.group, { x: d.group.position.x, z: d.group.position.z, rotY: d.group.rotation.y });
+      else {
+        d.group.position.x = h.x;
+        d.group.position.z = h.z;
+        d.group.rotation.y = h.rotY;
+      }
+    }
+    const ps = pods();
     const theme = themeFor(floorName());
     const y = ps[0].center.y;
+    for (const p of ps) arrange(p, theme.layout);
 
     // The desks and their chairs.
     const deskParts = new Set<THREE.Object3D>();
@@ -131,6 +153,44 @@ export function isoTheme(ctx: Ctx, pods: () => Pod[]) {
 
     placeProps(theme, ps, y);
     store.emit('floors');
+  }
+
+  /** Stands a pod's desks in `layout` round its middle (each desk's worker, laptop and chair with it). */
+  function arrange(p: Pod, layout: Layout) {
+    const desks = [...p.desks].sort((a, b) => a.def.id.localeCompare(b.def.id, undefined, { numeric: true }));
+    const c = p.center;
+    desks.forEach((d, i) => {
+      const g = d.group;
+      const h = home.get(g)!;
+      let x = h.x;
+      let z = h.z;
+      let rotY = h.rotY;
+      if (layout === 'row') {
+        x = c.x + (i - (desks.length - 1) / 2) * 1.55;
+        z = c.z;
+        rotY = 0;
+      } else if (layout === 'ring') {
+        const a = (i / desks.length) * Math.PI * 2 + Math.PI / 4;
+        x = c.x + Math.sin(a) * 1.35;
+        z = c.z + Math.cos(a) * 1.35;
+        rotY = a;
+      } else if (layout === 'pinwheel') {
+        const a = (i / desks.length) * Math.PI * 2;
+        x = c.x + 0.62 * Math.cos(a) + 0.95 * Math.sin(a);
+        z = c.z - 0.62 * Math.sin(a) + 0.95 * Math.cos(a);
+        rotY = a + Math.PI / 2;
+      } else if (layout === 'diagonal') {
+        const a = Math.PI / 4;
+        const dx = h.x - c.x;
+        const dz = h.z - c.z;
+        x = c.x + dx * Math.cos(a) + dz * Math.sin(a);
+        z = c.z - dx * Math.sin(a) + dz * Math.cos(a);
+        rotY = h.rotY + a;
+      }
+      g.position.x = x;
+      g.position.z = z;
+      g.rotation.y = rotY;
+    });
   }
 
   /** Whether a spot on the floor is clear of the office's own things (and of every desk), by `r` m. */

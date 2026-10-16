@@ -11,6 +11,7 @@ import { isoTheme } from './theme';
 import { isoToolbar } from './toolbar';
 import { isoMusic } from './music';
 import { isoHousekeeper } from './housekeeper';
+import { isoWander } from './wander';
 import { isoCutaway, ROOM_TOP } from './cutaway';
 import type { Net } from '../../net';
 import type { BoardActions } from '../../ui/github/prompts';
@@ -38,7 +39,7 @@ export interface IsoDeps {
   boardActions(): BoardActions;
 }
 
-export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player'>, deps: IsoDeps) {
+export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player' | 'views'>, deps: IsoDeps) {
   if (!isIso()) return;
   document.body.classList.add('iso');
 
@@ -55,6 +56,7 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
     openMinion(id, { net: deps.net, openTerminal: deps.openTerminal, boardActions: deps.boardActions, roleName: (w) => roles.find((r) => r.id === roleOf(w.prompt))?.name });
   const music = isoMusic();
   const housekeeper = isoHousekeeper(ctx, () => rooms.pods());
+  const wander = isoWander(ctx, parts);
   const toolbar = isoToolbar({ net: deps.net, hire: () => hire(), music: () => music.toggle(), boardActions: deps.boardActions, openTerminal: deps.openTerminal });
   setInterval(() => {
     rooms.refresh();
@@ -189,6 +191,7 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
   // After you've moved and everything's been updated, just before the frame is drawn.
   ctx.ticks.add('hud', ({ dt, t }) => {
     housekeeper.update(dt, t);
+    if (!onRoof()) wander.update(dt);
     // A car in the garage for each minion the building has hired (and any being driven).
     const hired = store.floors.reduce((n, f) => n + (f.workers ?? 0), 0);
     for (const car of ctx.office.cars.cars) car.root.visible = car.index < hired || car.occupied;
