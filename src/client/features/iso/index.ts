@@ -59,7 +59,7 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
   setInterval(() => {
     rooms.refresh();
     theme.apply();
-    toolbar.setTitle(theme.nameOf());
+    toolbar.setTitle(onRoof() ? '🌙 Rooftop bar' : theme.nameOf());
   }, 1000);
   const { camera, renderer, canvas } = ctx;
   parts.player.setView('third');
@@ -92,6 +92,7 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
   setInterval(() => cutaway.apply(), 1500);
   /** What's round the office, instead of the sky: a plain backdrop, as a tycoon game has. */
   const backdrop = new THREE.Color('#dfeee4');
+  const nightBackdrop = new THREE.Color('#1c1f3a');
   const dir = new THREE.Vector3(Math.cos(PITCH) * Math.sin(YAW), Math.sin(PITCH), Math.cos(PITCH) * Math.cos(YAW));
 
   /** The meshes the clouds are made of (the sky shows and hides their material, which the outline ignores). */
@@ -152,14 +153,8 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
   unlineCut();
   setInterval(unlineCut, 3000);
 
-  // Nothing to see up on the roof from here: down to the first floor instead.
-  const offTheRoof = () => {
-    if (store.floor !== ROOF) return;
-    const to = store.floors.find((f) => !f.cloning);
-    if (to) deps.net.send({ t: 'floor.go', floor: to.id });
-  };
-  store.on('floor', offTheRoof);
-  store.on('floors', offTheRoof);
+  /** Up on the rooftop bar it's always night; the office floors are always a bright afternoon. */
+  const onRoof = () => store.floor === ROOF;
 
   // No holiday dressing here (pumpkins, the dog's hat, costumes): the office stays itself all year.
   store.on('theme', () => {
@@ -169,7 +164,7 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
   });
 
   // Always a bright afternoon here, whatever the hour: a tycoon office is never in the dark.
-  const daylight = () => ctx.sky.show({ hour: 14, weather: 'clear' });
+  const daylight = () => ctx.sky.show({ hour: onRoof() ? 22 : 14, weather: 'clear' });
   daylight();
   setInterval(daylight, 2000);
 
@@ -203,8 +198,9 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
     focus.y = floorY;
     below.constant = -(floorY - 0.3);
     // The sky keeps its own colour object and sets it every frame: this colours it after.
-    if (ctx.scene.background instanceof THREE.Color) ctx.scene.background.copy(backdrop);
-    else ctx.scene.background = backdrop.clone();
+    const bg = onRoof() ? nightBackdrop : backdrop;
+    if (ctx.scene.background instanceof THREE.Color) ctx.scene.background.copy(bg);
+    else ctx.scene.background = bg.clone();
     camera.position.copy(focus).addScaledVector(dir, DISTANCE);
     camera.up.set(0, 1, 0);
     camera.lookAt(focus);
@@ -220,26 +216,35 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
       fog.far = DISTANCE + 200;
     }
     parts.me.root.visible = false;
+    // Left out for one frame, then back as it was (it's hidden while you're up on the roof).
     if (skipFrame) {
+      restore = ctx.office.group.visible;
       ctx.office.group.visible = false;
       skipFrame = false;
-      restore = true;
     } else if (restore) {
       ctx.office.group.visible = true;
       restore = false;
     }
+    // The floor's own things aren't up on the roof.
+    const down = !onRoof();
+    theme.props.visible = down;
+    rooms.labels.visible = down;
+    housekeeper.root.visible = down;
     // No sky from up here: its clouds would hang over the rooms, and its dome and stars, round them.
     for (const o of cloudMeshes()) o.visible = false;
     for (const o of skyBits()) o.visible = false;
     // The roof and the ceilings are cut away, but they'd still shade the floor from the sun.
     parts.stage.sun.castShadow = false;
-    // Full daylight, as the office is lit at noon (see createScene), whatever the sky is doing.
-    const { hemi, ambient, sun } = parts.stage;
-    hemi.intensity = 1.25;
-    ambient.intensity = 0.45;
-    sun.intensity = 1.7;
-    hemi.color.set('#fff5e6');
-    sun.color.set('#fff1d6');
+    // Full daylight on the office floors, as the office is lit at noon (see createScene), whatever the
+    // sky is doing. The roof keeps the night's own light: its string lights, the bar's glow.
+    if (!onRoof()) {
+      const { hemi, ambient, sun } = parts.stage;
+      hemi.intensity = 1.25;
+      ambient.intensity = 0.45;
+      sun.intensity = 1.7;
+      hemi.color.set('#fff5e6');
+      sun.color.set('#fff1d6');
+    }
   });
 
   // ---- The mouse: drag to look round, wheel to zoom, click a desk --------------------------------------

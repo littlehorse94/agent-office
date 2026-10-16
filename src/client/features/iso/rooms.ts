@@ -70,7 +70,7 @@ export function isoRooms(ctx: Ctx, roles: () => readonly TycoonRole[]) {
     return podOf(role.division)?.desks.find((d) => !store.workerAtDesk(d.def.id))?.def.id;
   }
 
-  return { refresh, deskFor, pods: () => pods };
+  return { refresh, deskFor, pods: () => pods, labels };
 }
 
 /** A room's name, as a rounded sign that always faces you. */
