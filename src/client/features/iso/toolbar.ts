@@ -12,6 +12,7 @@ import { tycoonInfo } from '../../tycoon/hire';
 export interface ToolbarDeps {
   net: Net;
   hire(): void;
+  music(): void;
   boardActions(): BoardActions;
   openTerminal(id: string): void;
 }
@@ -32,7 +33,8 @@ export function isoToolbar(deps: ToolbarDeps) {
   const issues = button('issues', () => openBoard('issues', deps.net, deps.boardActions()));
   const pulls = button('pulls', () => openBoard('pulls', deps.net, deps.boardActions()));
   const queue = button('queue', () => openQueue(deps.net, { openTerminal: deps.openTerminal }));
-  const bar = h('nav.iso-bar', { 'aria-label': 'Office' }, hire.b, issues.b, pulls.b, queue.b);
+  const music = h('button.btn', { type: 'button', title: 'Focus music (Spotify)', onclick: deps.music }, h('span.iso-icon', {}, '🎧'), h('span', {}, 'Music'));
+  const bar = h('nav.iso-bar', { 'aria-label': 'Office' }, hire.b, issues.b, pulls.b, queue.b, music);
   const title = h('div.iso-title');
   document.body.append(bar, title);
 

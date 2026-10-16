@@ -10,7 +10,7 @@ import type { Interactable } from '../../world/types';
 /** What a click does to each kind, and the pop it gives off. */
 const USABLE: Partial<Record<Interactable['kind'], string>> = {
   coffee: '☕',
-  jukebox: '🎵',
+  jukebox: '🎧',
   gong: '🔔',
   whiteboard: '🖍️',
   bookshelf: '📚',
@@ -32,6 +32,8 @@ export interface PickDeps {
   openWorker(id: string): void;
   /** A free desk was clicked. */
   hireAt(deskId: string): void;
+  /** The jukebox was clicked: the focus music. */
+  music(): void;
 }
 
 export function isoPicking(ctx: Ctx, canvas: HTMLCanvasElement, cutY: () => number, deps: PickDeps) {
@@ -96,7 +98,8 @@ export function isoPicking(ctx: Ctx, canvas: HTMLCanvasElement, cutY: () => numb
     }
     const pop = USABLE[it.kind];
     if (!pop) return;
-    ctx.interactions.use(it, 'E', null);
+    if (it.kind === 'jukebox') deps.music();
+    else ctx.interactions.use(it, 'E', null);
     puff(pop, point);
   }
 

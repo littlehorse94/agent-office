@@ -9,6 +9,7 @@ import { isoPicking } from './pick';
 import { isoRooms } from './rooms';
 import { isoTheme } from './theme';
 import { isoToolbar } from './toolbar';
+import { isoMusic } from './music';
 import type { Net } from '../../net';
 import type { BoardActions } from '../../ui/github/prompts';
 import { openMinion } from '../../tycoon/minion';
@@ -50,7 +51,8 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
   const hire = (deskId?: string) => void openHire(deps.net, { deskId, deskFor: rooms.deskFor });
   const openWorker = (id: string) =>
     openMinion(id, { net: deps.net, openTerminal: deps.openTerminal, boardActions: deps.boardActions, roleName: (w) => roles.find((r) => r.id === roleOf(w.prompt))?.name });
-  const toolbar = isoToolbar({ net: deps.net, hire: () => hire(), boardActions: deps.boardActions, openTerminal: deps.openTerminal });
+  const music = isoMusic();
+  const toolbar = isoToolbar({ net: deps.net, hire: () => hire(), music: () => music.toggle(), boardActions: deps.boardActions, openTerminal: deps.openTerminal });
   setInterval(() => {
     rooms.refresh();
     theme.apply();
@@ -199,7 +201,7 @@ export function installIso(ctx: Ctx, parts: Pick<Parts, 'stage' | 'me' | 'player
   });
 
   // ---- The mouse: drag to look round, wheel to zoom, click a desk --------------------------------------
-  const picking = isoPicking(ctx, canvas, () => cut.constant, { openWorker, hireAt: (deskId) => hire(deskId) });
+  const picking = isoPicking(ctx, canvas, () => cut.constant, { openWorker, hireAt: (deskId) => hire(deskId), music: () => music.open() });
   let drag: { x: number; y: number; moved: boolean } | null = null;
   canvas.addEventListener(
     'pointerdown',

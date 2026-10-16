@@ -43,3 +43,21 @@ body.iso #hint, body.iso #crosshair, body.iso .look-hint { display: none !import
   .iso-bar .btn { flex: 1; padding: 0 6px; font-size: 13px; }
   .iso-bar .btn span:not(.iso-icon):not(.n) { display: none; }
 }
+
+/* The focus music (music.ts): Spotify's player, in a panel that stays up while you work. */
+.iso-music {
+  position: fixed; right: 12px; bottom: 96px; z-index: 35; width: min(360px, calc(100vw - 24px));
+  display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 3px solid var(--ink); border-radius: 18px;
+  background: var(--paper-2); box-shadow: 0 4px 0 var(--ink);
+}
+.iso-music header { display: flex; align-items: center; justify-content: space-between; font-size: 15px; }
+.iso-music-close { height: 30px; min-width: 30px; padding: 0 8px; }
+.iso-music-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.iso-music-tab { display: inline-flex; align-items: center; }
+.iso-music-tab .btn { height: 34px; font-size: 13px; }
+.iso-music-tab.on .btn { background: var(--accent); color: var(--accent-ink); }
+.iso-music-x { border: 0; background: none; color: var(--muted); font-size: 16px; cursor: pointer; padding: 0 4px; }
+.iso-music-player iframe { display: block; border-radius: 12px; }
+.iso-music-add { display: flex; gap: 6px; }
+.iso-music-add input { flex: 1; min-width: 0; height: 34px; }
+.iso-music-add .btn { height: 34px; }
